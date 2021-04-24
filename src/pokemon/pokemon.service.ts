@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as PokeList from './pokeData/data.json';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { Parser } from 'json2csv';
 import {
   PokemonBasicData,
   PokemonProperties,
   PokemonReturnData,
 } from './interfaces/pokemon.interfaces';
-import { request, gql } from 'graphql-request';
+//import { request, gql } from 'graphql-request';
 
 @Injectable()
 export class PokemonService {
@@ -15,7 +15,7 @@ export class PokemonService {
     const resultsJSON = PokeList.results.filter((pokemon: PokemonBasicData) =>
       pokemon.name.includes(name),
     );
-    const promises = resultsJSON.map(
+    const promises: Promise<AxiosResponse>[] = resultsJSON.map(
       (pokemon) =>
         new Promise(async (resolve) => {
           resolve(
@@ -25,20 +25,15 @@ export class PokemonService {
           );
         }),
     );
-    const responses = await Promise.all(promises);
-    const results: PokemonProperties[] = responses.map(
-      ({ data: { base_experience, name, weight, height } }) => ({
-        base_experience,
-        name,
-        weight,
-        height,
-      }),
-    );
+    const responses: AxiosResponse[] = await Promise.all(promises);
+    const results = this.normalizePokemonData(responses);
 
     return { count: resultsJSON.length, results };
   }
 
   async getCSV(color: string): Promise<string> {
+    /** 
+     * GRAPHQL APPROACH
     const query = gql`
     {
       pokemon_v2_pokemoncolor(where: { name: { _eq: "${color}" } }) {
@@ -71,14 +66,50 @@ export class PokemonService {
         }
       }
     }
-    const sortedData = normalizedData.sort((a, b) => a.base_experience - b.base_experience)
-    //CONVERT TO CSV
+    */
+
+    const { data: {pokemon_species} } = await axios.get(
+      `https://pokeapi.co/api/v2/pokemon-color/${color}`,
+    );
+
+    const promises: Promise<AxiosResponse>[] = pokemon_species.map(
+      (pokemon: PokemonBasicData) =>
+        new Promise(async (resolve) => {
+          const [,pokemonNumber] = pokemon.url.match(/(\d+)/g);
+          resolve(
+            await axios.get(
+              `https://pokeapi.co/api/v2/pokemon/${pokemonNumber}`,
+            ),
+          );
+        }),
+    );
+  
+    const responses: AxiosResponse[] = await Promise.all(promises);
+    const normalizedData = this.normalizePokemonData(responses);
+
+    const sortedData = normalizedData.sort(
+      (a, b) => a.base_experience - b.base_experience,
+    );
+
+    //TRANSFORM TO CSV
     const fields = ['name', 'base_experience', 'height', 'weight'];
     const opts = { fields };
-
     const parser = new Parser(opts);
     const csv = parser.parse(sortedData);
 
     return csv;
+  }
+
+  private normalizePokemonData(
+    responses: AxiosResponse[],
+  ): PokemonProperties[] {
+    return responses.map(
+      ({ data: { base_experience, name, weight, height } }) => ({
+        base_experience,
+        name,
+        weight,
+        height,
+      }),
+    );
   }
 }
