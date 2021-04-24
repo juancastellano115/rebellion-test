@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Res, Response, Header } from '@nestjs/common';
 import { PokemonService } from './pokemon.service';
 import * as fs from 'fs';
 import axios from 'axios';
@@ -38,7 +38,9 @@ export class PokemonController {
   }
 
   @Get('/csv/:color')
-  getCSV(@Param('color', new TrimLowerPipe()) color: string): string {
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename=pokemons.csv')
+  getCSV(@Param('color', new TrimLowerPipe()) color: string): Promise<string> {
     return this.pokemonService.getCSV(color);
   }
 }
