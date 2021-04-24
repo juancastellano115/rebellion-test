@@ -3,6 +3,7 @@ import { PokemonService } from './pokemon.service';
 import * as fs from 'fs';
 import axios from 'axios';
 import { PokemonReturnData } from './interfaces/pokemon.interfaces';
+import { TrimLowerPipe } from './pipes/trim-lower-pipe';
 @Controller('pokemon')
 export class PokemonController {
   private readonly path = './src/pokemon/pokedata/data.json';
@@ -30,12 +31,14 @@ export class PokemonController {
   }
 
   @Post('/findByName')
-  findByname(@Body('name') name: string): Promise<PokemonReturnData> {
+  findByname(
+    @Body('name', new TrimLowerPipe()) name: string,
+  ): Promise<PokemonReturnData> {
     return this.pokemonService.findByName(name);
   }
 
   @Get('/csv/:color')
-  getCSV(@Param('color') color: string): string {
+  getCSV(@Param('color', new TrimLowerPipe()) color: string): string {
     return this.pokemonService.getCSV(color);
   }
 }
