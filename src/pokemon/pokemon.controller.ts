@@ -1,9 +1,19 @@
-import { Controller, Post, Body, Get, Param, Res, Response, Header, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Header,
+  HttpCode,
+  ValidationPipe,
+} from '@nestjs/common';
 import { PokemonService } from './pokemon.service';
 import * as fs from 'fs';
 import axios from 'axios';
 import { PokemonReturnData } from './interfaces/pokemon.interfaces';
 import { TrimLowerPipe } from './pipes/trim-lower-pipe';
+import { findByNameDto, getCSVDto } from './dto/pokemon.dto';
 @Controller('pokemon')
 export class PokemonController {
   private readonly path = './src/pokemon/pokedata/data.json';
@@ -32,15 +42,18 @@ export class PokemonController {
   @HttpCode(200)
   @Post('/findByName')
   findByName(
-    @Body('name', new TrimLowerPipe()) name: string,
+    @Body(new ValidationPipe(), new TrimLowerPipe())
+    findByNameDto: findByNameDto,
   ): Promise<PokemonReturnData> {
-    return this.pokemonService.findByName(name);
+    return this.pokemonService.findByName(findByNameDto.name);
   }
 
   @Get('/csv/:color')
   @Header('Content-Type', 'text/csv')
   @Header('Content-Disposition', 'attachment; filename=pokemons.csv')
-  getCSV(@Param('color', new TrimLowerPipe()) color: string): Promise<string> {
-    return this.pokemonService.getCSV(color);
+  getCSV(
+    @Param(new ValidationPipe(), new TrimLowerPipe()) getCSVDto: getCSVDto,
+  ): Promise<string> {
+    return this.pokemonService.getCSV(getCSVDto.color);
   }
 }
