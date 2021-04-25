@@ -7,22 +7,22 @@ import {
   PokemonProperties,
   PokemonReturnData,
 } from './interfaces/pokemon.interfaces';
+import { PokeapiService } from './pokeapi.service';
 //import { request, gql } from 'graphql-request';
 
 @Injectable()
 export class PokemonService {
+  constructor(private pokeapiService: PokeapiService) {}
+
   async findByName(name: string): Promise<PokemonReturnData> {
+
     const resultsJSON = PokeList.results.filter((pokemon: PokemonBasicData) =>
       pokemon.name.includes(name),
     );
     const promises: Promise<AxiosResponse>[] = resultsJSON.map(
       (pokemon) =>
         new Promise(async (resolve) => {
-          resolve(
-            await axios.get(
-              `https://pokeapi.co/api/v2/pokemon/${pokemon.name}`,
-            ),
-          );
+          resolve(this.pokeapiService.getPokemon(pokemon.name));
         }),
     );
     const responses: AxiosResponse[] = await Promise.all(promises);
@@ -68,30 +68,27 @@ export class PokemonService {
     }
     */
 
-    const { data: {pokemon_species} } = await axios.get(
-      `https://pokeapi.co/api/v2/pokemon-color/${color}`,
-    );
+    const {
+      data: { pokemon_species },
+    } = await this.pokeapiService.getPokemonsByColor(color);
 
     const promises: Promise<AxiosResponse>[] = pokemon_species.map(
       (pokemon: PokemonBasicData) =>
         new Promise(async (resolve) => {
-          const [,pokemonNumber] = pokemon.url.match(/(\d+)/g);
-          resolve(
-            await axios.get(
-              `https://pokeapi.co/api/v2/pokemon/${pokemonNumber}`,
-            ),
-          );
+          const [, pokemonNumber] = pokemon.url.match(/(\d+)/g);
+          resolve(this.pokeapiService.getPokemon(pokemonNumber));
         }),
     );
-  
+    //Use threading to execute all the promises at once 
     const responses: AxiosResponse[] = await Promise.all(promises);
+    //normalize the responses
     const normalizedData = this.normalizePokemonData(responses);
-
+    //Sort by base_experience
     const sortedData = normalizedData.sort(
       (a, b) => a.base_experience - b.base_experience,
     );
 
-    //TRANSFORM TO CSV
+    //Transform to CSV
     const fields = ['name', 'base_experience', 'height', 'weight'];
     const opts = { fields };
     const parser = new Parser(opts);

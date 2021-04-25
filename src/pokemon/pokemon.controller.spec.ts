@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PokemonController } from './pokemon.controller';
-
+import { PokemonService } from './pokemon.service';
+import { PokeapiService } from './pokeapi.service';
 describe('PokemonController', () => {
   let controller: PokemonController;
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PokemonController],
+      providers: [PokemonService, PokeapiService],
     }).compile();
 
     controller = module.get<PokemonController>(PokemonController);

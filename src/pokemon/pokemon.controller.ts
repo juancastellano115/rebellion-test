@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Res, Response, Header } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Res, Response, Header, HttpCode } from '@nestjs/common';
 import { PokemonService } from './pokemon.service';
 import * as fs from 'fs';
 import axios from 'axios';
@@ -29,9 +29,9 @@ export class PokemonController {
       console.log(error);
     }
   }
-
+  @HttpCode(200)
   @Post('/findByName')
-  findByname(
+  findByName(
     @Body('name', new TrimLowerPipe()) name: string,
   ): Promise<PokemonReturnData> {
     return this.pokemonService.findByName(name);

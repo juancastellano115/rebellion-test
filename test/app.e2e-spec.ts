@@ -19,6 +19,20 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
-      .expect('Hello World!');
+      .expect('Hello Rebellion Pay!');
+  });
+
+  it('/pokemon/findByName (POST)', () => {
+    return request(app.getHttpServer())
+      .post('/pokemon/findByName')
+      .send({ name: 'PIKa chu' })
+      .expect(200)
+  });
+
+  it('/pokemon/csv/yellow (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/pokemon/csv/yellow')
+      .expect('Content-Type', /csv/)
+      .expect(200)
   });
 });
