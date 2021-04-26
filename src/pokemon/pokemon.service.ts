@@ -153,8 +153,8 @@ export class PokemonService {
       ({ data: { base_experience, name, weight, height } }) => ({
         base_experience,
         name,
-        weight,
         height,
+        weight,
       }),
     );
   }
