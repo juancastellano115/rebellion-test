@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PokemonService } from './pokemon.service';
 import { PokeapiService } from './pokeapi.service';
+import { BadRequestException } from '@nestjs/common';
 /**
  * This class is for mocking the service,
  * This means that we "fake" the API calls
@@ -8,21 +9,42 @@ import { PokeapiService } from './pokeapi.service';
  */
 class PokeApiServiceMock {
   getPokemon(id: number | string) {
-    return {
-      data: { name: 'pikachu', base_experience: 112, weight: 60, height: 4 },
-    };
+    return new Promise((resolve) =>
+      resolve({
+        data: { name: 'pikachu', base_experience: 112, weight: 60, height: 4 },
+      }),
+    );
   }
   getPokemonsByColor(color: string) {
-    return {
-      data: {
-        pokemon_species: [
-          {
-            name: 'pikachu',
-            url: 'https://pokeapi.co/api/v2/pokemon-species/25/',
-          },
-        ],
-      },
-    };
+    const colors = [
+      'blue',
+      'black',
+      'brown',
+      'gray',
+      'green',
+      'pink',
+      'purple',
+      'red',
+      'white',
+      'yellow',
+    ];
+    if (!colors.includes(color)) {
+      throw new BadRequestException(
+        'Failed to get color data',
+      );
+    }
+    return new Promise((resolve) =>
+      resolve({
+        data: {
+          pokemon_species: [
+            {
+              name: 'pikachu',
+              url: 'https://pokeapi.co/api/v2/pokemon-species/25/',
+            },
+          ],
+        },
+      }),
+    );
   }
 }
 
@@ -48,16 +70,15 @@ describe('PokemonService', () => {
   });
 
   describe('findByName', () => {
-
     it('should return an integer and an array', async () => {
       const result = await service.findByName('pikachu');
       expect(typeof result.count).toBe('number');
       expect(Array.isArray(result.results)).toBeTruthy();
     });
 
-    it('should return an array longer than one', async () => {
+    it('should return an array longer than zero', async () => {
       const result = await service.findByName('pikachu');
-      expect(result.results.length).toBeGreaterThan(1);
+      expect(result.results.length).toBeGreaterThan(0);
     });
 
     it('should return non null values', async () => {
@@ -65,13 +86,26 @@ describe('PokemonService', () => {
       expect(result.results).not.toEqual(null);
     });
 
+    it('should return 404 exception', async () => {
+      await expect(service.findByName('pekachung')).rejects.toThrow(
+        'Pokemon was not found',
+      );
+    });
   });
 
   describe('getCSV', () => {
-
     it('should return a CSV string', async () => {
       expect(typeof (await service.getCSV('yellow'))).toBe('string');
     });
 
+    it('should not return null', async () => {
+      expect(typeof (await service.getCSV('yellow'))).not.toEqual(null);
+    });
+
+    it('should return 400 exception', async () => {
+      await expect(service.getCSV('magenta')).rejects.toThrow(
+        'Failed to get color data',
+      );
+    });
   });
 });

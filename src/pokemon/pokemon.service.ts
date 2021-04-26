@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import * as PokeList from './pokeData/data.json';
+import * as PokeList from '../pokemon/pokedata/data.json';
 import axios, { AxiosResponse } from 'axios';
 import { Parser } from 'json2csv';
 import {
@@ -108,9 +108,7 @@ export class PokemonService {
     const {
       data: { pokemon_species },
     } = await this.pokeapiService.getPokemonsByColor(color).catch(() => {
-      throw new BadRequestException(
-        'The external server could not be reached properly',
-      );
+      throw new BadRequestException('Failed to get color data');
     });
 
     const promises: Promise<AxiosResponse>[] = pokemon_species.map(
@@ -172,9 +170,7 @@ export class PokemonService {
           const { data } = await axios.get(
             'https://pokeapi.co/api/v2/pokemon?limit=-1',
           );
-          fs.writeFile(this.path, JSON.stringify(data), () => {
-            console.log(`Pokedata updated`);
-          });
+          fs.writeFileSync(this.path, JSON.stringify(data));
         })();
       } else {
         throw new Error("PokeData doesn't exist");

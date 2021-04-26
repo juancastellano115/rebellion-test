@@ -22,17 +22,34 @@ describe('AppController (e2e)', () => {
       .expect('Hello Rebellion Pay!');
   });
 
-  it('/pokemon/findByName (POST)', () => {
-    return request(app.getHttpServer())
-      .post('/pokemon/findByName')
-      .send({ name: 'PIKa chu' })
-      .expect(200)
+  describe('FindByName (e2e)', () => {
+    it('/pokemon/findByName (POST)', () => {
+      return request(app.getHttpServer())
+        .post('/pokemon/findByName')
+        .send({ name: 'PIKa chu' })
+        .expect(200);
+    });
+
+    it('/pokemon/findByName (POST)', () => {
+      return request(app.getHttpServer())
+        .post('/pokemon/findByName')
+        .send({ name: 'Pekachung' })
+        .expect(404);
+    });
   });
 
-  it('/pokemon/csv/yellow (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/pokemon/csv/yellow')
-      .expect('Content-Type', /csv/)
-      .expect(200)
+  describe('GetCSV (e2e)', () => {
+    it('/pokemon/csv/yellow (GET)', () => {
+      return request(app.getHttpServer())
+        .get('/pokemon/csv/yellow')
+        .expect('Content-Type', /csv/)
+        .expect(200);
+    });
+
+    it('/pokemon/csv/magenta (GET)', () => {
+      return request(app.getHttpServer())
+        .get('/pokemon/csv/magenta')
+        .expect(400);
+    });
   });
 });
