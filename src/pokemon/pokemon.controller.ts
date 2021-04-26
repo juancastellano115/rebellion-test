@@ -12,6 +12,7 @@ import { PokemonService } from './pokemon.service';
 import { PokemonReturnData } from './interfaces/pokemon.interfaces';
 import { TrimLowerPipe } from './pipes/trim-lower-pipe';
 import { findByNameDto, getCSVDto } from './dto/pokemon.dto';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 @Controller('pokemon')
 export class PokemonController {
   /**
@@ -23,6 +24,12 @@ export class PokemonController {
     pokemonService.loadPokeData();
   }
 
+  @ApiTags('RebellionPay')
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns a Pokemon search with name, base_experience, height and weight.',
+  })
   @HttpCode(200)
   @Post('/findByName')
   findByName(
@@ -32,6 +39,12 @@ export class PokemonController {
     return this.pokemonService.findByName(findByNameDto.name);
   }
 
+  @ApiTags('RebellionPay')
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns a CSV list by the specified color with name, base_experience, height and weight.',
+  })
   @Get('/csv/:color')
   @Header('Content-Type', 'text/csv')
   @Header('Content-Disposition', 'attachment; filename=pokemons.csv')
